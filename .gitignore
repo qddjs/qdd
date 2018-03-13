@@ -1,0 +1,6 @@
+node_modules
+perf.data
+perf.data.old
+*.log
+package-lock.json
+!testapp/package-lock.json

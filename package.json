@@ -1,0 +1,40 @@
+{
+  "name": "qdd",
+  "version": "1.0.0",
+  "description": "Download Javascript dependencies",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test",
+    "bench": "node bench"
+  },
+  "bin": "./index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bengl/qdd.git"
+  },
+  "keywords": [
+    "install",
+    "package",
+    "module"
+  ],
+  "author": "Bryan English <bryan@bryanenglish.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bengl/qdd/issues"
+  },
+  "homepage": "https://github.com/bengl/qdd#readme",
+  "files": [
+    "index.js",
+    "lib/*.js"
+  ],
+  "engines": {
+    "node": ">=8.5.0"
+  }, 
+  "devDependencies": {
+    "pitesti": "^2.3.0",
+    "prettier": "^1.11.1"
+  },
+  "dependencies": {
+    "tar": "^4.4.0"
+  }
+}
