@@ -4,6 +4,7 @@
 const config = require("./lib/config.js");
 const cp = require("./lib/cp.js");
 const download = require("./lib/download.js");
+const mkdirp = require('./lib/mkdirp.js');
 
 const fs = require("fs");
 const path = require("path");
@@ -16,12 +17,12 @@ const isProd =
   process.env.NODE_ENV === "production" ||
   process.env.NODE_ENV === "prod";
 
-if (fs.existsSync(path.join(process.cwd(), "node_modules"))) {
+if (fs.existsSync(`${process.cwd()}/node_modules`)) {
   console.error("Please delete your node_modules directory before installing.");
   process.exit(1);
 }
 
-const tree = require(path.join(process.cwd(), "package-lock.json"));
+const tree = require(`${process.cwd()}/package-lock.json`);
 
 const todos = [];
 function install(mod, dir) {
@@ -33,14 +34,12 @@ function install(mod, dir) {
     if (entry.bundled) {
       continue;
     }
-    if (isProd) {
-      if (entry.dev) {
-        continue;
-      }
+    if (isProd && entry.dev) {
+      continue;
     }
     todos.push(installOne.bind(null, name, entry, dir));
     if (entry.dependencies) {
-      install(entry, path.join(dir, "node_modules", name));
+      install(entry, `${dir}/node_modules/${name}`);
     }
   }
 }
@@ -53,11 +52,11 @@ async function installOne(name, entry, dir) {
     process.exit(1);
   }
   const cached = await getCacheDir(entry.resolved, entry.integrity);
-  await cp(cached, path.join(dir, "node_modules", name));
+  await cp(cached, `${dir}/node_modules/${name}`);
 }
 
 async function getCacheDir(url, integrity) {
-  const cacheDir = path.join(config.cacheDir, integrity);
+  const cacheDir = config.cacheDir + '/' + integrity;
   try {
     const stats = await stat(cacheDir);
     if (stats.isDirectory()) {
@@ -69,7 +68,9 @@ async function getCacheDir(url, integrity) {
 }
 
 install(tree, process.cwd());
-Promise.all(todos.map(x => x())).catch(e => {
+mkdirp(config.cacheDir)
+.then(() => Promise.all(todos.map(x => x())))
+.catch(e => {
   console.error(e.stack);
   process.exit(1);
 });
