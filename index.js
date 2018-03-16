@@ -7,7 +7,6 @@ const download = require("./lib/download.js");
 const mkdirp = require('./lib/mkdirp.js');
 
 const fs = require("fs");
-const path = require("path");
 const util = require("util");
 
 const stat = util.promisify(fs.stat);
@@ -37,34 +36,32 @@ function install(mod, dir) {
     if (isProd && entry.dev) {
       continue;
     }
-    todos.push(installOne.bind(null, name, entry, dir));
+
+    const { integrity, resolved: url } = entry;
+    if (!integrity || !url) {
+      console.error("invalid entry found in package-lock.json");
+      console.error(util.inspect({ [name]: entry }));
+      console.error("fix this, delete node_modules, and try again");
+      process.exit(1);
+    }
+    const destDir = `${dir}/node_modules/${name}`;
+    const cacheDir = config.cacheDir + '/' + integrity
+    todos.push(installOne.bind(null, name, integrity, url, destDir, cacheDir));
     if (entry.dependencies) {
-      install(entry, `${dir}/node_modules/${name}`);
+      install(entry, destDir);
     }
   }
 }
 
-async function installOne(name, entry, dir) {
-  if (!entry.integrity || !entry.resolved) {
-    console.error("Invalid entry found in package-lock.json");
-    console.error(util.inspect({ [name]: entry }));
-    console.error("Fix this, delete node_modules, and try again");
-    process.exit(1);
-  }
-  const cached = await getCacheDir(entry.resolved, entry.integrity);
-  await cp(cached, `${dir}/node_modules/${name}`);
-}
-
-async function getCacheDir(url, integrity) {
-  const cacheDir = config.cacheDir + '/' + integrity;
+async function installOne(name, integrity, url, destDir, cacheDir) {
   try {
     const stats = await stat(cacheDir);
     if (stats.isDirectory()) {
+      await cp(cacheDir, destDir, false);
       return cacheDir;
     }
   } catch (e) {}
-  await download(cacheDir, url, integrity);
-  return cacheDir;
+  await download(cacheDir, url, integrity, destDir);
 }
 
 install(tree, process.cwd());
@@ -72,5 +69,5 @@ mkdirp(config.cacheDir)
 .then(() => Promise.all(todos.map(x => x())))
 .catch(e => {
   console.error(e.stack);
-  process.exit(1);
+  process.exitCode = 1;
 });
