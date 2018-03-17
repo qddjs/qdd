@@ -5,6 +5,7 @@ const config = require("./lib/config.js");
 const cp = require("./lib/cp.js");
 const download = require("./lib/download.js");
 const mkdirp = require('./lib/mkdirp.js');
+const isdir = require("./lib/isdir.js");
 
 const fs = require("fs");
 const util = require("util");
@@ -55,8 +56,7 @@ function install(mod, dir) {
 
 async function installOne(name, integrity, url, destDir, cacheDir) {
   try {
-    const stats = await stat(cacheDir);
-    if (stats.isDirectory()) {
+    if (await isdir(cacheDir)) {
       await cp(cacheDir, destDir, false);
       return cacheDir;
     }
