@@ -70,10 +70,10 @@ On my machine (a Lenovo X1 Carbon from mid 2016), this gives the following
 output:
 
 ```
- fresh cache npm ci (avg): 7.4647710232 seconds
-    fresh cache qdd (avg): 4.2521036302 seconds
-primed cache npm ci (avg): 5.4451536764 seconds
-   primed cache qdd (avg): 0.6349750040 seconds
+ fresh cache npm ci (avg): 7.5899417363 seconds
+    fresh cache qdd (avg): 3.9653772702 seconds
+primed cache npm ci (avg): 5.4712137427 seconds
+   primed cache qdd (avg): 0.4172178746 seconds
 ```
 
 It's pretty quick, but remember that speed like this comes with tradeoffs.

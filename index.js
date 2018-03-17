@@ -10,8 +10,6 @@ const isdir = require("./lib/isdir.js");
 const fs = require("fs");
 const util = require("util");
 
-const stat = util.promisify(fs.stat);
-
 const isProd =
   "QDD_PROD" in process.env ||
   process.env.NODE_ENV === "production" ||
@@ -54,20 +52,27 @@ function install(mod, dir) {
   }
 }
 
-async function installOne(name, integrity, url, destDir, cacheDir) {
-  try {
-    if (await isdir(cacheDir)) {
-      await cp(cacheDir, destDir, false);
-      return cacheDir;
+function installOne(name, integrity, url, destDir, cacheDir, cb) {
+  isdir(cacheDir, (err, isDir) => {
+    if (err || !isDir) {
+      return download(cacheDir, url, integrity, destDir, cb);
     }
-  } catch (e) {}
-  await download(cacheDir, url, integrity, destDir);
+    cp(cacheDir, destDir, false, cb);
+  });
 }
 
 install(tree, process.cwd());
-mkdirp(config.cacheDir)
-.then(() => Promise.all(todos.map(x => x())))
-.catch(e => {
-  console.error(e.stack);
-  process.exitCode = 1;
+
+mkdirp(config.cacheDir, (err) => {
+  if (err) {
+    throw err;
+  }
+  const toRun = todos.length;
+  for (const fn of todos) {
+    fn(err => {
+      if (err) {
+        throw err;
+      }
+    });
+  }
 });
