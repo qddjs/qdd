@@ -4,7 +4,7 @@
   "description": "Download Javascript dependencies",
   "main": "index.js",
   "scripts": {
-    "test": "node test",
+    "test": "semistandard && node test",
     "bench": "node bench"
   },
   "bin": "./index.js",
@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "pitesti": "^2.3.0",
-    "prettier": "^1.11.1"
+    "semistandard": "^12.0.1"
   },
   "dependencies": {
     "tar-stream": "^1.5.5"
