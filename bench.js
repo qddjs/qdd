@@ -12,7 +12,7 @@ async function freshNpm () {
   await exec(`npm cache clean --force`);
   await exec(`rm -rf testapp/node_modules`);
   const start = process.hrtime();
-  await exec(`npm ci`, { cwd: path.join(__dirname, 'testapp') });
+  await exec(`npm ci --ignore-scripts`, { cwd: path.join(__dirname, 'testapp') });
   const elapsed = process.hrtime(start);
   const time = elapsed[0] + elapsed[1] / 1e9;
   freshNpmTimes.push(time);
@@ -33,7 +33,7 @@ async function freshQdd () {
 async function primedNpm () {
   await exec(`rm -rf testapp/node_modules`);
   const start = process.hrtime();
-  await exec(`npm ci`, { cwd: path.join(__dirname, 'testapp') });
+  await exec(`npm ci --ignore-scripts`, { cwd: path.join(__dirname, 'testapp') });
   const elapsed = process.hrtime(start);
   const time = elapsed[0] + elapsed[1] / 1e9;
   primedNpmTimes.push(time);
