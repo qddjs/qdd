@@ -60,6 +60,9 @@ this number by setting the environment variable `QDD_CONCURRENCY`.
 You can get some (very) verbose logging of what's happening inside `qdd` by
 setting the environment variable `QDD_DEBUG` to `1`.
 
+You can skip the usage of the cache directory entirely by setting the
+environment variable `QDD_NOCACHE` to `1`.
+
 ## Benchmarks
 
 You can run the benchmarks with `npm run bench`. This will run both `npm ci` and

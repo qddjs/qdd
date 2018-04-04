@@ -15,6 +15,8 @@ const isProd =
   process.env.NODE_ENV === 'production' ||
   process.env.NODE_ENV === 'prod';
 
+const useCache = !('QDD_NOCACHE' in process.env);
+
 if (fs.existsSync(`${process.cwd()}/node_modules`)) {
   console.error('Please delete your node_modules directory before installing.');
   process.exit(1);
@@ -44,7 +46,7 @@ function install (mod, dir) {
       process.exit(1);
     }
     const destDir = `${dir}/node_modules/${name}`;
-    const cacheDir = config.cacheDir + '/' + integrity;
+    const cacheDir = useCache ? config.cacheDir + '/' + integrity : null;
     todos.push(installOne.bind(null, name, integrity, url, destDir, cacheDir));
     if (entry.dependencies) {
       install(entry, destDir);
@@ -53,20 +55,19 @@ function install (mod, dir) {
 }
 
 function installOne (name, integrity, url, destDir, cacheDir, cb) {
-  isdir(cacheDir, (err, isDir) => {
-    if (err || !isDir) {
-      return download(cacheDir, url, integrity, destDir, cb);
-    }
-    cp(cacheDir, destDir, false, cb);
-  });
+  if (cacheDir) {
+    isdir(cacheDir, (err, isDir) => {
+      if (err || !isDir) {
+        return download(cacheDir, url, integrity, destDir, cb);
+      }
+      cp(cacheDir, destDir, false, cb);
+    });
+  } else {
+    return download(cacheDir, url, integrity, destDir, cb);
+  }
 }
 
-install(tree, process.cwd());
-
-mkdirp(config.cacheDir, (err) => {
-  if (err) {
-    throw err;
-  }
+function doTheTodos() {
   for (const fn of todos) {
     fn(err => {
       if (err) {
@@ -74,4 +75,17 @@ mkdirp(config.cacheDir, (err) => {
       }
     });
   }
-});
+}
+
+install(tree, process.cwd());
+
+if (useCache) {
+  mkdirp(config.cacheDir, (err) => {
+    if (err) {
+      throw err;
+    }
+    doTheTodos();
+  });
+} else {
+  doTheTodos();
+}
