@@ -9,6 +9,12 @@ const isdir = require('./lib/isdir.js');
 
 const fs = require('fs');
 const util = require('util');
+let worker;
+try {
+  worker = require('worker_threads');
+} catch (e) {
+  // Older node. No workers.
+}
 
 const isProd =
   'QDD_PROD' in process.env ||
@@ -25,7 +31,7 @@ if (fs.existsSync(`${process.cwd()}/node_modules`)) {
 const tree = require(`${process.cwd()}/package-lock.json`);
 
 const todos = [];
-function install (mod, dir) {
+function install (mod, dir, runInWorker) {
   const deps = mod.dependencies;
   if (!deps) return;
 
@@ -47,9 +53,13 @@ function install (mod, dir) {
     }
     const destDir = `${dir}/node_modules/${name}`;
     const cacheDir = useCache ? config.cacheDir + '/' + integrity : null;
-    todos.push(installOne.bind(null, name, integrity, url, destDir, cacheDir));
+    if (runInWorker) {
+      runInWorker([name, integrity, url, destDir, cacheDir]);
+    } else {
+      todos.push(installOne.bind(null, name, integrity, url, destDir, cacheDir));
+    }
     if (entry.dependencies) {
-      install(entry, destDir);
+      install(entry, destDir, runInWorker);
     }
   }
 }
@@ -77,15 +87,54 @@ function doTheTodos() {
   }
 }
 
-install(tree, process.cwd());
-
-if (useCache) {
-  mkdirp(config.cacheDir, (err) => {
-    if (err) {
-      throw err;
-    }
-    doTheTodos();
+function makeWorker() {
+  const w = new worker.Worker(__filename);
+  w.on('error', err => {
+    throw err;
   });
+  return w;
+}
+
+
+if (!worker) {
+  install(tree, process.cwd());
+  if (useCache) {
+    mkdirp(config.cacheDir, (err) => {
+      if (err) {
+        throw err;
+      }
+      doTheTodos();
+    });
+  } else {
+    doTheTodos();
+  }
 } else {
-  doTheTodos();
+  if (worker.isMainThread) {
+    const os = require('os');
+    const numWorkers = os.cpus().length;
+    const workers = [];
+    for (let i = 0; i < numWorkers; i++) workers.push(makeWorker());
+    let toRun = 0;
+    const runInWorker = (args) => {
+      toRun++;
+      const w = workers[Math.floor(Math.random()*numWorkers)];
+      w.on('message', msg => {
+        if (msg === 'done') {
+          toRun--;
+        }
+        if (toRun === 0) {
+          workers.forEach(wrk => wrk.terminate());
+        }
+      });
+      w.postMessage(args);
+    }
+    install(tree, process.cwd(), runInWorker);
+  } else {
+    worker.parentPort.on('message', args => installOne(...args, err => {
+      if (err) {
+        throw err;
+      }
+      worker.parentPort.postMessage('done');
+    }));
+  }
 }
