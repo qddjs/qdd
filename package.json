@@ -37,6 +37,8 @@
     "yarn": "^1.5.1"
   },
   "dependencies": {
+    "fs-minipass": "^1.2.5",
+    "minizlib": "^1.1.0",
     "tar-stream": "^1.5.5"
   }
 }
