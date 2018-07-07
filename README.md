@@ -1,5 +1,7 @@
 # qdd
 
+[![Build Status](https://travis-ci.org/bengl/qdd.svg?branch=master)](https://travis-ci.org/bengl/qdd)
+
 ## Example
 
 ```
