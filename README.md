@@ -1,6 +1,7 @@
 # qdd
 
 [![Build Status](https://travis-ci.org/bengl/qdd.svg?branch=master)](https://travis-ci.org/bengl/qdd)
+[![Coverage Status](https://coveralls.io/repos/github/bengl/qdd/badge.svg?branch=master)](https://coveralls.io/github/bengl/qdd?branch=master)
 
 ## Example
 
