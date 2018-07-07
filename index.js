@@ -67,7 +67,7 @@ function installOne (name, integrity, url, destDir, cacheDir, cb) {
   }
 }
 
-function doTheTodos() {
+function doTheTodos () {
   for (const fn of todos) {
     fn(err => {
       if (err) {
