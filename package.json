@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "semistandard && node test",
+    "coverage": "nyc npm test",
+    "test-ci": "npm run coverage && nyc report --reporter=text-lcov | coveralls",
     "bench": "node bench"
   },
   "bin": "./index.js",
@@ -31,7 +33,9 @@
     "node": ">=8.5.0"
   },
   "devDependencies": {
+    "coveralls": "^3.0.2",
     "npm": "^5.8.0-next.0",
+    "nyc": "^12.0.2",
     "pitesti": "^2.3.0",
     "semistandard": "^12.0.1",
     "yarn": "^1.5.1"
