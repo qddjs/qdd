@@ -60,7 +60,7 @@ function installOne (name, integrity, url, destDir, cacheDir, cb) {
       if (err || !isDir) {
         return download(cacheDir, url, integrity, destDir, cb);
       }
-      cp(cacheDir, destDir, false, cb);
+      cp(cacheDir, destDir, mkdirp, true, cb);
     });
   } else {
     return download(cacheDir, url, integrity, destDir, cb);
