@@ -5,7 +5,7 @@ const config = require('./lib/config.js');
 const cp = require('./lib/cp.js');
 const download = require('./lib/download.js');
 const mkdirp = require('./lib/mkdirp.js');
-const isdir = require('./lib/isdir.js');
+const { isdir } = require('./lib/fastfs.js');
 
 const fs = require('fs');
 const util = require('util');
