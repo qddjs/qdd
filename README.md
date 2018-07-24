@@ -70,7 +70,8 @@ environment variable `QDD_NOCACHE` to `1`.
 
 You can run the benchmarks with `npm run bench`. This will run both `npm ci` and
 `qdd`, both with primed caches and fresh caches, 10x for each case, and output
-the averages.
+the averages. You can set the number of iterations with an `ITERATIONS`
+environment variable.
 
 On my machine (a Lenovo X1 Carbon from mid 2016), this gives the following
 output:

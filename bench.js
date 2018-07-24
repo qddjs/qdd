@@ -74,7 +74,7 @@ async function primedQdd () {
   console.log('   primed cache qdd:', time, 'seconds');
 }
 
-const TIMES = 10;
+const TIMES = Number(process.env.ITERATIONS) || 10;
 
 function average (nums) {
   let total = 0;
