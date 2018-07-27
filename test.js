@@ -51,7 +51,6 @@ test`no cache trees are equal`(async () => {
     maxBuffer: 100 * 1024 * 1024
   })).stdout.replace(/\[ +\d+\] {2}package.json/g, 'package.json');
   // ^ package.jsons have different sizes
-  await exec(`rm -rf ~/.cache/qdd`);
   await exec(`rm -rf testapp/node_modules`);
   await exec('node --no-warnings ../index.js', {
     cwd: path.join(__dirname, 'testapp'),

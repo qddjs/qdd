@@ -2,3 +2,5 @@ node_modules
 perf.data
 perf.data.old
 *.log
+.nyc_output
+coverage
