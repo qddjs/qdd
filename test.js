@@ -98,4 +98,19 @@ test`prod mode trees are equal`(async () => {
   assert.strictEqual(npmTree, qddTree);
 });
 
+test`exit 1 if node_modules still present`(async () => {
+  let err;
+  try {
+    await exec('node ../index.js', { cwd: path.join(__dirname, 'testapp') });
+  } catch (e) {
+    err = e;
+  }
+  assert(err);
+  assert.strictEqual(err.code, 1);
+  assert.strictEqual(
+    err.stderr.toString(),
+    'Please delete your node_modules directory before installing.\n'
+  );
+});
+
 test();
