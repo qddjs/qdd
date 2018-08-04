@@ -1,19 +1,12 @@
-# qdd
+<div align="center">
+<img src="./qdd-logo.svg"/>
+</div>
 
 [![Build Status](https://travis-ci.org/bengl/qdd.svg?branch=master)](https://travis-ci.org/bengl/qdd)
 [![Coverage Status](https://coveralls.io/repos/github/bengl/qdd/badge.svg?branch=master)](https://coveralls.io/github/bengl/qdd?branch=master)
 
-## Example
 
-```
-npm i -g qdd
-# And now, in a directory with a package-lock.json
-qdd
-```
-
-## Description
-
-**`qdd`** is short for **qu**ickly **d**ownload **d**ependencies. That's all it
+**`qdd`** is short for **q**uickly **d**ownload **d**ependencies. That's all it
 does. It's meant as a replacement for `npm ci` in situations where:
 
 * You don't need install scripts. (Note: this means no compiled modules.)
@@ -32,6 +25,14 @@ this tool is only useful if all your dependencies are `install`-script-free, and
 that you don't need the `.bin` directory. These are some pretty severe
 limitations, but in many situations, this is still good enough to get the job
 done.
+
+## Example
+
+```
+npm i -g qdd
+# And now, in a directory with a package-lock.json
+qdd
+```
 
 ## Can I Use It?
 
