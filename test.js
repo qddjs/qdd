@@ -113,4 +113,23 @@ test`exit 1 if node_modules still present`(async () => {
   );
 });
 
+test`debug`(() => {
+  const debugFile = './lib/debug.js';
+  const results = [];
+  process._rawDebug = results.push.bind(results);
+  {
+    const debug = require(debugFile);
+    debug(() => 'hello');
+    debug(() => 'world');
+  }
+  delete require.cache[require.resolve(debugFile)];
+  process.env.QDD_DEBUG = 1;
+  {
+    const debug = require(debugFile);
+    debug(() => 'hola');
+    debug(() => 'mundo');
+  }
+  assert.deepStrictEqual(results, ['QDD: hola', 'QDD: mundo']);
+});
+
 test();
