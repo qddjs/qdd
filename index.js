@@ -10,12 +10,9 @@ const { isdir } = require('./lib/fastfs.js');
 const fs = require('fs');
 const util = require('util');
 
-const isProd =
-  'QDD_PROD' in process.env ||
-  process.env.NODE_ENV === 'production' ||
-  process.env.NODE_ENV === 'prod';
+const isProd = config.production;
 
-const useCache = !('QDD_NOCACHE' in process.env);
+const useCache = !config.noCache;
 
 if (fs.existsSync(`${process.cwd()}/node_modules`)) {
   console.error('Please delete your node_modules directory before installing.');

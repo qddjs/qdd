@@ -123,6 +123,7 @@ test`debug`(() => {
     debug(() => 'world');
   }
   delete require.cache[require.resolve(debugFile)];
+  delete require.cache[require.resolve('./lib/config.js')];
   process.env.QDD_DEBUG = 1;
   {
     const debug = require(debugFile);
@@ -130,6 +131,67 @@ test`debug`(() => {
     debug(() => 'mundo');
   }
   assert.deepStrictEqual(results, ['QDD: hola', 'QDD: mundo']);
+  delete process.env.QDD_DEBUG;
+});
+
+test`config`(() => {
+  const absoluteConfig = require.resolve('./lib/config.js');
+  delete require.cache[absoluteConfig];
+  let config = require('./lib/config.js');
+  assert.deepStrictEqual(config, {
+    cacheDir: `${process.env.HOME}/.cache/qdd`,
+    debug: false,
+    concurrency: 10,
+    production: false,
+    noCache: false
+  });
+  delete require.cache[absoluteConfig];
+  process.argv = [
+    process.execPath,
+    __filename,
+    '--cache',
+    'cacheFoo',
+    '--debug',
+    '--concurrency',
+    '15',
+    '--prod',
+    '--nocache'
+  ];
+  config = require('./lib/config.js');
+  assert.deepStrictEqual(config, {
+    cacheDir: 'cacheFoo',
+    debug: true,
+    concurrency: 15,
+    production: true,
+    noCache: true
+  });
+  delete require.cache[absoluteConfig];
+  process.argv = [process.execPath, __filename, '--production'];
+  process.env.QDD_CACHE = 'cacheFoo';
+  process.env.QDD_DEBUG = '1';
+  process.env.QDD_CONCURRENCY = '15';
+  process.env.QDD_NOCACHE = '1';
+  config = require('./lib/config.js');
+  assert.deepStrictEqual(config, {
+    cacheDir: 'cacheFoo',
+    debug: true,
+    concurrency: 15,
+    production: true,
+    noCache: true
+  });
+  delete require.cache[absoluteConfig];
+  process.argv = [process.execPath, __filename];
+  process.env = { QDD_PROD: '1' };
+  assert.strictEqual(config.production, true);
+  delete require.cache[absoluteConfig];
+  process.env = { QDD_PRODUCTION: '1' };
+  assert.strictEqual(config.production, true);
+  delete require.cache[absoluteConfig];
+  process.env = { NODE_ENV: 'prod' };
+  assert.strictEqual(config.production, true);
+  delete require.cache[absoluteConfig];
+  process.env = { NODE_ENV: 'production' };
+  assert.strictEqual(config.production, true);
 });
 
 test();

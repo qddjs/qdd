@@ -55,17 +55,21 @@ install the dependencies into `$PWD/node_modules/`. **The `node_modules`
 directory must not exist prior to running `qdd`. It will not be deleted
 automatically, as it would in `npm ci`.**
 
-To skip installing `devDependencies`, set the environment variable `QDD_PROD`
-to `1`.
+### Options
 
-`qdd` will download dependencies with 10 sockets by default. You can change
-this number by setting the environment variable `QDD_CONCURRENCY`.
+Options may either be given as environment variables of the form `QDD_OPTION` or
+as command line arguments of the form `--option [value]`. For boolean values,
+set the environment variable to `1` or use the command line argument without a
+`value` to set the option to true (defualt is false).
 
-You can get some (very) verbose logging of what's happening inside `qdd` by
-setting the environment variable `QDD_DEBUG` to `1`.
-
-You can skip the usage of the cache directory entirely by setting the
-environment variable `QDD_NOCACHE` to `1`.
+* `prod|production` (boolean): Skip installing `devDependencies`.
+  * Setting the environment variable `NODE_ENV=prod` or `NODE_ENV=production`
+    will also turn this on.
+* `concurrency` (number): Number of sockets to download with. (Default 10.)
+* `debug` (boolean): Get some very verbose logging to stderr.
+* `cache` (path string): Location to store the cache. (Default
+  `$HOME/.cache/qdd`.)
+* `nocache` (boolean): Do not use the disk cache at all.
 
 ## Benchmarks
 
