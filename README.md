@@ -43,6 +43,8 @@ the following are true:
   in `package.json`.
 * Your project operates just fine if you pass `--ignore-scripts` to `npm` or
   `yarn` when you install dependencies.
+* You don't rely on `bundleDependencies`.
+* None of your dependencies are from git URLs or other non-registry sources.
 * Your operating system is UNIXey (*).
 
 > (*) Note: For the moment, Windows is not supported. This will change real
