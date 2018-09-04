@@ -89,7 +89,7 @@ function average (nums) {
 }
 
 (async () => {
-  const cleanup = await mkTestDir('normal');
+  const cleanup = await mkTestDir('bench');
   for (let i = 0; i < TIMES; i++) {
     await freshNpm();
     await freshYarn();
