@@ -34,15 +34,15 @@
   },
   "devDependencies": {
     "coveralls": "^3.0.2",
-    "npm": "^5.8.0-next.0",
-    "nyc": "^12.0.2",
+    "npm": "^6.4.1",
+    "nyc": "^13.0.1",
     "pitesti": "^2.3.0",
     "semistandard": "^12.0.1",
-    "yarn": "^1.5.1"
+    "yarn": "^1.9.4"
   },
   "dependencies": {
     "fs-minipass": "^1.2.5",
     "minizlib": "^1.1.0",
-    "tar-stream": "^1.5.5"
+    "tar-stream": "^1.6.1"
   }
 }

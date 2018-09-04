@@ -3,6 +3,10 @@ const util = require('util');
 const { exec: execCb } = require('child_process');
 const exec = util.promisify(execCb);
 
+const { mkTestDir } = require('./test/util.js');
+
+const QDD = path.resolve(__dirname, 'index.js');
+
 const freshNpmTimes = [];
 const freshYarnTimes = [];
 const freshQddTimes = [];
@@ -11,10 +15,10 @@ const primedYarnTimes = [];
 const primedQddTimes = [];
 
 async function freshNpm () {
-  await exec(`rm -rf testapp/.npm-cache`);
-  await exec(`rm -rf testapp/node_modules`);
+  await exec(`rm -rf .npm-cache`);
+  await exec(`rm -rf node_modules`);
   const start = process.hrtime();
-  await exec(`npm ci --ignore-scripts --cache .npm-cache`, { cwd: path.join(__dirname, 'testapp') });
+  await exec(`npm ci --ignore-scripts --cache .npm-cache`);
   const elapsed = process.hrtime(start);
   const time = elapsed[0] + elapsed[1] / 1e9;
   freshNpmTimes.push(time);
@@ -22,10 +26,10 @@ async function freshNpm () {
 }
 
 async function freshYarn () {
-  await exec(`rm -rf testapp/.yarn-cache`);
-  await exec(`rm -rf testapp/node_modules`);
+  await exec(`rm -rf .yarn-cache`);
+  await exec(`rm -rf node_modules`);
   const start = process.hrtime();
-  await exec(`yarn --ignore-scripts --cache-folder .yarn-cache`, { cwd: path.join(__dirname, 'testapp') });
+  await exec(`yarn --ignore-scripts --cache-folder .yarn-cache`);
   const elapsed = process.hrtime(start);
   const time = elapsed[0] + elapsed[1] / 1e9;
   freshYarnTimes.push(time);
@@ -34,9 +38,9 @@ async function freshYarn () {
 
 async function freshQdd () {
   await exec(`rm -rf ~/.cache/qdd`);
-  await exec(`rm -rf testapp/node_modules`);
+  await exec(`rm -rf node_modules`);
   const start = process.hrtime();
-  await exec('node ../index.js', { cwd: path.join(__dirname, 'testapp') });
+  await exec(`node ${QDD}`);
   const elapsed = process.hrtime(start);
   const time = elapsed[0] + elapsed[1] / 1e9;
   freshQddTimes.push(time);
@@ -44,20 +48,20 @@ async function freshQdd () {
 }
 
 async function primedNpm () {
-  await exec(`rm -rf testapp/node_modules`);
+  await exec(`rm -rf node_modules`);
   const start = process.hrtime();
-  await exec(`npm ci --ignore-scripts --cache .npm-cache`, { cwd: path.join(__dirname, 'testapp') });
+  await exec(`npm ci --ignore-scripts --cache .npm-cache`);
   const elapsed = process.hrtime(start);
   const time = elapsed[0] + elapsed[1] / 1e9;
   primedNpmTimes.push(time);
-  await exec(`rm -rf testapp/.npm-cache`);
+  await exec(`rm -rf .npm-cache`);
   console.log('primed cache npm ci:', time, 'seconds');
 }
 
 async function primedYarn () {
-  await exec(`rm -rf testapp/node_modules`);
+  await exec(`rm -rf node_modules`);
   const start = process.hrtime();
-  await exec(`yarn --ignore-scripts --cache-folder .yarn-cache`, { cwd: path.join(__dirname, 'testapp') });
+  await exec(`yarn --ignore-scripts --cache-folder .yarn-cache`);
   const elapsed = process.hrtime(start);
   const time = elapsed[0] + elapsed[1] / 1e9;
   primedYarnTimes.push(time);
@@ -65,9 +69,9 @@ async function primedYarn () {
 }
 
 async function primedQdd () {
-  await exec(`rm -rf testapp/node_modules`);
+  await exec(`rm -rf node_modules`);
   const start = process.hrtime();
-  await exec('node ../index.js', { cwd: path.join(__dirname, 'testapp') });
+  await exec(`node ${QDD}`);
   const elapsed = process.hrtime(start);
   const time = elapsed[0] + elapsed[1] / 1e9;
   primedQddTimes.push(time);
@@ -85,6 +89,7 @@ function average (nums) {
 }
 
 (async () => {
+  const cleanup = await mkTestDir('normal');
   for (let i = 0; i < TIMES; i++) {
     await freshNpm();
     await freshYarn();
@@ -95,6 +100,7 @@ function average (nums) {
     await primedYarn();
     await primedQdd();
   }
+  await cleanup();
   console.log(' fresh cache npm ci (avg):', average(freshNpmTimes), 'seconds');
   console.log('   fresh cache yarn (avg):', average(freshYarnTimes), 'seconds');
   console.log('    fresh cache qdd (avg):', average(freshQddTimes), 'seconds');
