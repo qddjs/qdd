@@ -1,6 +1,10 @@
 'use strict';
 
-const { mkdtemp: mkdtempCb } = require('fs');
+const {
+  mkdtemp: mkdtempCb,
+  readdir: readdirCb,
+  stat: statCb
+} = require('fs');
 const { exec: execCb } = require('child_process');
 const path = require('path');
 const util = require('util');
@@ -8,6 +12,8 @@ const os = require('os');
 const cpr = util.promisify(require('../lib/cp.js'));
 const exec = util.promisify(execCb);
 const mkdtemp = util.promisify(mkdtempCb);
+const readdir = util.promisify(readdirCb);
+const stat = util.promisify(statCb);
 const fixturesDir = path.resolve(__dirname, 'fixtures');
 
 const QDD = path.resolve(__dirname, '..', 'index.js');
@@ -27,14 +33,8 @@ async function mkTestDir (fixtureName) {
   };
 }
 
-async function getTree () {
-  return (await exec('tree -s -p ./node_modules', {
-    maxBuffer: 100 * 1024 * 1024
-  }))
-    .stdout
-    .replace(/\[d.*\d+\]/g, '[DIR]')
-    .replace(/\[-[rwx-]+ /g, '[ ')
-    .replace(/\[ +\d+\] {2}package.json/g, 'package.json');
+function getTree () {
+  return tree(path.join(process.cwd(), 'node_modules'));
 }
 
 function clearNodeModules () {
@@ -60,6 +60,27 @@ async function getNpmTree (opts) {
   const tree = await getTree();
   npmTrees[treeKey] = tree;
   return tree;
+}
+
+async function tree (dir) {
+  const contents = await readdir(dir);
+  const result = {};
+  for (let i = 0; i < contents.length; i++) {
+    const item = contents[i];
+    if (item.startsWith('.')) {
+      continue;
+    }
+    const fullItem = dir + '/' + item;
+    const stats = await stat(fullItem);
+    if (stats.isDirectory()) {
+      result[item] = await tree(fullItem);
+    } else if (item === 'package.json') {
+      result[item] = 'package.json';
+    } else {
+      result[item] = stats.size;
+    }
+  }
+  return result;
 }
 
 module.exports = { mkTestDir, exec, getQddTree, getNpmTree };

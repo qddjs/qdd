@@ -1,6 +1,5 @@
 language: node_js
 before_install:
-  - sudo apt-get install -y tree
   - npm i -g npm
 node_js:
   - "10"

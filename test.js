@@ -19,7 +19,7 @@ test`init test dir`(async () => {
 
 test`fresh cache trees are equal`(async () => {
   await exec(`rm -rf ~/.cache/qdd`);
-  assert.strictEqual(
+  assert.deepStrictEqual(
     await getNpmTree(),
     await getQddTree()
   );
@@ -27,28 +27,28 @@ test`fresh cache trees are equal`(async () => {
 
 test`fresh cache trees are equal, with another cache`(async () => {
   await exec(`rm -rf /tmp/testqddcache`);
-  assert.strictEqual(
+  assert.deepStrictEqual(
     await getNpmTree(),
     await getQddTree('--cache /tmp/testqddcache')
   );
 });
 
 test`no cache trees are equal`(async () => {
-  assert.strictEqual(
+  assert.deepStrictEqual(
     await getNpmTree(),
     await getQddTree('--nocache')
   );
 });
 
 test`primed cache trees are equal`(async () => {
-  assert.strictEqual(
+  assert.deepStrictEqual(
     await getNpmTree(),
     await getQddTree()
   );
 });
 
 test`prod mode trees are equal`(async () => {
-  assert.strictEqual(
+  assert.deepStrictEqual(
     await getNpmTree('--only=prod'),
     await getQddTree('--prod')
   );
