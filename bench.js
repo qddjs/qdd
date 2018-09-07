@@ -7,75 +7,65 @@ const { mkTestDir } = require('./test/util.js');
 
 const QDD = path.resolve(__dirname, 'index.js');
 
-const freshNpmTimes = [];
-const freshYarnTimes = [];
-const freshQddTimes = [];
-const primedNpmTimes = [];
-const primedYarnTimes = [];
-const primedQddTimes = [];
+class Installer {
+  constructor(name, run) {
+    this.name = name;
+    this.cache = `.${name.replace(' ', '-')}-cache`;
+    this.run = run.replace('CACHE', this.cache);
+    this.tab = ' '.repeat(7 - name.length);
+    this.freshTimes = [];
+    this.primedTimes = [];
+  }
+  
+  clearCache () {
+    return exec(`rm -rf ${this.cache}`);
+  }
 
-async function freshNpm () {
-  await exec(`rm -rf .npm-cache`);
-  await exec(`rm -rf node_modules`);
-  const start = process.hrtime();
-  await exec(`npm ci --ignore-scripts --cache .npm-cache`);
-  const elapsed = process.hrtime(start);
-  const time = elapsed[0] + elapsed[1] / 1e9;
-  freshNpmTimes.push(time);
-  console.log(' fresh cache npm ci:', time, 'seconds');
+  averageFresh() {
+    if (!this._averageFresh) {
+      this._averageFresh = average(this.freshTimes);
+    }
+    return this._averageFresh;
+  }
+
+  averagePrimed() {
+    if (!this._averagePrimed) {
+      this._averagePrimed = average(this.primedTimes);
+    }
+    return this._averagePrimed;
+  }
+
+  install () {
+    return exec(this.run);
+  }
 }
 
-async function freshYarn () {
-  await exec(`rm -rf .yarn-cache`);
+const installers = [
+  new Installer('npm ci', `npm ci --ignore-scripts --cache CACHE`),
+  new Installer('yarn', `yarn --ignore-scripts --cache-folder CACHE`),
+  new Installer('pnpm', `pnpm install --ignore-scripts --store CACHE --no-lock`),
+  new Installer('qdd', `node ${QDD} --cache CACHE`)
+]
+
+async function run(installer) {
   await exec(`rm -rf node_modules`);
   const start = process.hrtime();
-  await exec(`yarn --ignore-scripts --cache-folder .yarn-cache`);
+  await installer.install();
   const elapsed = process.hrtime(start);
-  const time = elapsed[0] + elapsed[1] / 1e9;
-  freshYarnTimes.push(time);
-  console.log('   fresh cache yarn:', time, 'seconds');
+  return elapsed[0] + elapsed[1] / 1e9;
 }
 
-async function freshQdd () {
-  await exec(`rm -rf ~/.cache/qdd`);
-  await exec(`rm -rf node_modules`);
-  const start = process.hrtime();
-  await exec(`node ${QDD}`);
-  const elapsed = process.hrtime(start);
-  const time = elapsed[0] + elapsed[1] / 1e9;
-  freshQddTimes.push(time);
-  console.log('    fresh cache qdd:', time, 'seconds');
+async function freshRun(installer) {
+  await installer.clearCache();
+  const time = await run(installer);
+  installer.freshTimes.push(time);
+  console.log(`${installer.tab} fresh cache ${installer.name}:`, time, 'seconds');
 }
 
-async function primedNpm () {
-  await exec(`rm -rf node_modules`);
-  const start = process.hrtime();
-  await exec(`npm ci --ignore-scripts --cache .npm-cache`);
-  const elapsed = process.hrtime(start);
-  const time = elapsed[0] + elapsed[1] / 1e9;
-  primedNpmTimes.push(time);
-  await exec(`rm -rf .npm-cache`);
-  console.log('primed cache npm ci:', time, 'seconds');
-}
-
-async function primedYarn () {
-  await exec(`rm -rf node_modules`);
-  const start = process.hrtime();
-  await exec(`yarn --ignore-scripts --cache-folder .yarn-cache`);
-  const elapsed = process.hrtime(start);
-  const time = elapsed[0] + elapsed[1] / 1e9;
-  primedYarnTimes.push(time);
-  console.log('  primed cache yarn:', time, 'seconds');
-}
-
-async function primedQdd () {
-  await exec(`rm -rf node_modules`);
-  const start = process.hrtime();
-  await exec(`node ${QDD}`);
-  const elapsed = process.hrtime(start);
-  const time = elapsed[0] + elapsed[1] / 1e9;
-  primedQddTimes.push(time);
-  console.log('   primed cache qdd:', time, 'seconds');
+async function primedRun(installer) {
+  const time = await run(installer);
+  installer.primedTimes.push(time);
+  console.log(`${installer.tab}primed cache ${installer.name}:`, time, 'seconds');
 }
 
 const TIMES = Number(process.env.ITERATIONS) || 10;
@@ -91,20 +81,33 @@ function average (nums) {
 (async () => {
   const cleanup = await mkTestDir('bench');
   for (let i = 0; i < TIMES; i++) {
-    await freshNpm();
-    await freshYarn();
-    await freshQdd();
+    for (const installer of installers) {
+      await freshRun(installer);
+    }
   }
   for (let i = 0; i < TIMES; i++) {
-    await primedNpm();
-    await primedYarn();
-    await primedQdd();
+    for (const installer of installers) {
+      await primedRun(installer);
+    }
   }
   await cleanup();
-  console.log(' fresh cache npm ci (avg):', average(freshNpmTimes), 'seconds');
-  console.log('   fresh cache yarn (avg):', average(freshYarnTimes), 'seconds');
-  console.log('    fresh cache qdd (avg):', average(freshQddTimes), 'seconds');
-  console.log('primed cache npm ci (avg):', average(primedNpmTimes), 'seconds');
-  console.log('  primed cache yarn (avg):', average(primedYarnTimes), 'seconds');
-  console.log('   primed cache qdd (avg):', average(primedQddTimes), 'seconds');
-})();
+  console.log(' ------ ');
+  for (const installer of installers) {
+    console.log(
+      `${installer.tab}  fresh cache ${installer.name} (avg):`,
+      installer.averageFresh(),
+      'seconds'
+    );
+  }
+  for (const installer of installers) {
+    console.log(
+      `${installer.tab} primed cache ${installer.name} (avg):`,
+      installer.averagePrimed(),
+      'seconds'
+    );
+  }
+
+})().catch(e => {
+  console.error(e.stack);
+  process.exit(1);
+});
