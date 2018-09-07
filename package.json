@@ -1,6 +1,6 @@
 {
   "name": "qdd",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Download Javascript dependencies",
   "main": "index.js",
   "scripts": {
