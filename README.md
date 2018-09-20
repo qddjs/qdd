@@ -72,6 +72,8 @@ set the environment variable to `1` or use the command line argument without a
 * `cache` (path string): Location to store the cache. (Default
   `$HOME/.cache/qdd`.)
 * `nocache` (boolean): Do not use the disk cache at all.
+* `onlycache` (boolean): Do not install in `node_modules`, and only use the disk
+  cache.
 
 ## Benchmarks
 

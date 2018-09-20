@@ -41,9 +41,13 @@ function clearNodeModules () {
   return exec(`rm -rf node_modules`);
 }
 
-async function getQddTree (opts, env = {}) {
+function runQdd (opts) {
+  return exec(`node --no-warnings ${QDD}` + (opts ? ' ' + opts : ''));
+}
+
+async function getQddTree (opts) {
   await clearNodeModules();
-  await exec(`node --no-warnings ${QDD}` + (opts ? ' ' + opts : ''));
+  await runQdd(opts);
   return getTree();
 }
 
@@ -83,4 +87,12 @@ async function tree (dir) {
   return result;
 }
 
-module.exports = { mkTestDir, exec, getQddTree, getNpmTree };
+module.exports = {
+  clearNodeModules,
+  runQdd,
+  mkTestDir,
+  exec,
+  getQddTree,
+  getNpmTree,
+  tree
+};

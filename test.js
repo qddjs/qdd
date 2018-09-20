@@ -1,17 +1,24 @@
 'use strict';
 
 const assert = require('assert');
+const util = require('util');
+const fs = require('fs');
+const access = util.promisify(fs.access);
 const path = require('path');
 const {
   mkTestDir,
   getQddTree,
   getNpmTree,
-  exec
+  exec,
+  runQdd,
+  clearNodeModules,
+  tree
 } = require('./test/util.js');
 
 const test = require('pitesti')({ timeout: 60000 });
 
 let cleanup;
+let cacheTree;
 
 test`init test dir`(async () => {
   cleanup = await mkTestDir('normal');
@@ -31,6 +38,9 @@ test`fresh cache trees are equal, with another cache`(async () => {
     await getNpmTree(),
     await getQddTree('--cache /tmp/testqddcache')
   );
+
+  // we'll use this in the cache-only test
+  cacheTree = await tree('/tmp/testqddcache');
 });
 
 test`no cache trees are equal`(async () => {
@@ -69,6 +79,22 @@ test`exit 1 if node_modules still present`(async () => {
   );
 });
 
+test`cache-only works`(async () => {
+  const cacheDir = '/tmp/testqddcache';
+  await exec(`rm -rf ${cacheDir}`);
+  await clearNodeModules();
+  await runQdd(`--onlycache --cache ${cacheDir}`);
+  assert.deepEqual(cacheTree, await tree(cacheDir));
+  let err;
+  try {
+    await access(path.join(process.cwd(), 'node_modules'), fs.constants.F_OK);
+  } catch (e) {
+    err = e;
+  }
+  assert(err);
+  await exec(`rm -rf ${cacheDir}`);
+});
+
 test`debug`(() => {
   const debugFile = './lib/debug.js';
   const results = [];
@@ -99,7 +125,8 @@ test`config`(() => {
     debug: false,
     concurrency: 10,
     production: false,
-    noCache: false
+    noCache: false,
+    cacheOnly: false
   });
   delete require.cache[absoluteConfig];
   process.argv = [
@@ -111,7 +138,8 @@ test`config`(() => {
     '--concurrency',
     '15',
     '--prod',
-    '--nocache'
+    '--nocache',
+    '--onlycache'
   ];
   config = require('./lib/config.js');
   assert.deepStrictEqual(config, {
@@ -119,7 +147,8 @@ test`config`(() => {
     debug: true,
     concurrency: 15,
     production: true,
-    noCache: true
+    noCache: true,
+    cacheOnly: true
   });
   delete require.cache[absoluteConfig];
   process.argv = [process.execPath, __filename, '--production'];
@@ -127,13 +156,15 @@ test`config`(() => {
   process.env.QDD_DEBUG = '1';
   process.env.QDD_CONCURRENCY = '15';
   process.env.QDD_NOCACHE = '1';
+  process.env.QDD_ONLYCACHE = '1';
   config = require('./lib/config.js');
   assert.deepStrictEqual(config, {
     cacheDir: 'cacheFoo',
     debug: true,
     concurrency: 15,
     production: true,
-    noCache: true
+    noCache: true,
+    cacheOnly: true
   });
   delete require.cache[absoluteConfig];
   process.argv = [process.execPath, __filename];

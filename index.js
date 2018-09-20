@@ -13,6 +13,7 @@ const util = require('util');
 const isProd = config.production;
 
 const useCache = !config.noCache;
+const useDest = !config.cacheOnly;
 
 if (fs.existsSync(`${process.cwd()}/node_modules`)) {
   console.error('Please delete your node_modules directory before installing.');
@@ -42,7 +43,7 @@ function install (mod, dir) {
       console.error('fix this, delete node_modules, and try again');
       process.exit(1);
     }
-    const destDir = `${dir}/node_modules/${name}`;
+    const destDir = useDest ? `${dir}/node_modules/${name}` : null;
     const cacheDir = useCache ? config.cacheDir + '/' + integrity : null;
     todos.push(installOne.bind(null, name, integrity, url, destDir, cacheDir));
     if (entry.dependencies) {
@@ -57,7 +58,9 @@ function installOne (name, integrity, url, destDir, cacheDir, cb) {
       if (err || !isDir) {
         return download(cacheDir, url, integrity, destDir, cb);
       }
-      cp(cacheDir, destDir, false, cb);
+      if (useDest) {
+        cp(cacheDir, destDir, false, cb);
+      }
     });
   } else {
     return download(cacheDir, url, integrity, destDir, cb);
