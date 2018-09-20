@@ -75,6 +75,24 @@ set the environment variable to `1` or use the command line argument without a
 * `onlycache` (boolean): Do not install in `node_modules`, and only use the disk
   cache.
 
+## Experimental Features
+
+Alongside `qdd`, `qdd-node` is also installed. This will run your application
+just as `node` would, except the loader will also check qdd's cache directory.
+All node options are supported. This works nicely with `qdd --onlycache`, which
+skips installing into `node_modules`. To specify the cache directory for
+`qdd-node`, set the `QDD_CACHE` environment variable to absolute path for the
+cache directory.
+
+Since this is an experimental feature, the following limitations apply:
+
+* `qdd-node` must be run in the same directory as `package-lock.json`.
+* EcmaScript Module loading is not working.
+
+Planned additions:
+
+* Have `qdd-node` automatically install modules as required.
+
 ## Benchmarks
 
 You can run the benchmarks with `npm run bench`. This will run both `npm ci` and
