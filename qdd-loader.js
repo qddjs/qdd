@@ -1,9 +1,10 @@
 'use strict';
 
 const Module = require('module');
+const fs = require('fs');
+const { execSync } = require('child_process');
 
 const cacheDir = (process.env.QDD_CACHE || `${process.env.HOME}/.cache/qdd`);
-const cache = node => cacheDir + '/' + node.integrity;
 
 // 1. Set up the lock tree
 
@@ -29,6 +30,21 @@ function getDep(node, depName) {
 })(lockTree);
 
 // 2. Shim the module loader
+
+let installed = false;
+
+function cache(node) {
+  const dir = cacheDir + '/' + node.integrity;
+  if (!installed) {
+    try {
+      fs.accessSync(dir, fs.constants.F_OK);
+    } catch (e) {
+      execSync(`node ${__dirname}/index.js --onlycache`);
+    }
+    installed = true;
+  }
+  return dir;
+}
 
 let currentParent;
 

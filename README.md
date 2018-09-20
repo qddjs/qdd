@@ -78,20 +78,24 @@ set the environment variable to `1` or use the command line argument without a
 ## Experimental Features
 
 Alongside `qdd`, `qdd-node` is also installed. This will run your application
-just as `node` would, except the loader will also check qdd's cache directory.
-All node options are supported. This works nicely with `qdd --onlycache`, which
-skips installing into `node_modules`. To specify the cache directory for
-`qdd-node`, set the `QDD_CACHE` environment variable to absolute path for the
-cache directory.
+just as `node` would, except the loader will check qdd's cache directory. All
+node options are supported. This works nicely with `qdd --onlycache`, which
+skips installing into `node_modules`. Note that that would not really be
+necessary because if the cache is missing a package, then `qdd --onlycache` will
+be run for you implicitly and then the module will be loaded. To specify the
+cache directory for `qdd-node`, set the `QDD_CACHE` environment variable to
+absolute path for the cache directory.
+
+To summarize, if your app is qdd-compatible (see "Can I Use It?" section above),
+then you can simply run it with `qdd-node` instead of `node`, and don't bother
+with the installation step. If your cache is fresh, it will take some time to
+install the packages into the cache, but otherwise this should be fairly
+quick.
 
 Since this is an experimental feature, the following limitations apply:
 
 * `qdd-node` must be run in the same directory as `package-lock.json`.
 * EcmaScript Module loading is not working.
-
-Planned additions:
-
-* Have `qdd-node` automatically install modules as required.
 
 ## Benchmarks
 
