@@ -11,12 +11,12 @@ const cacheDir = (process.env.QDD_CACHE || `${process.env.HOME}/.cache/qdd`);
 const lockTree = require(process.cwd() + '/package-lock.json');
 lockTree.requires = lockTree.dependencies;
 
-function getDep(node, depName) {
+function getDep (node, depName) {
   const deps = node.dependencies;
   return deps && deps[depName] ? deps[depName] : getDep(node.parent, depName);
 }
 
-(function augmentTree(node, parent) {
+(function augmentTree (node, parent) {
   for (const depName of Object.keys(node.dependencies || {})) {
     const dep = node.dependencies[depName];
     dep.parent = node;
@@ -33,7 +33,7 @@ function getDep(node, depName) {
 
 let installed = false;
 
-function cache(node) {
+function cache (node) {
   const dir = cacheDir + '/' + node.integrity;
   if (!installed) {
     try {
@@ -78,8 +78,8 @@ Module._resolveFilename = function (request, parent, isMain) {
 
 const origLoad = Module.prototype.load;
 Module.prototype.load = function (filename) {
-  this.treeNode = this.parent ?
-    (this.parent.nextTreeNode || this.parent.treeNode) :
-    lockTree;
+  this.treeNode = this.parent
+    ? (this.parent.nextTreeNode || this.parent.treeNode)
+    : lockTree;
   return origLoad.call(this, filename);
 };
