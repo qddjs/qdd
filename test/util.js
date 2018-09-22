@@ -9,7 +9,7 @@ const { exec: execCb } = require('child_process');
 const path = require('path');
 const util = require('util');
 const os = require('os');
-const cpr = util.promisify(require('../lib/cp.js'));
+const cpr = util.promisify(require('qfastfs').cpr);
 const exec = util.promisify(execCb);
 const mkdtemp = util.promisify(mkdtempCb);
 const readdir = util.promisify(readdirCb);
@@ -20,7 +20,7 @@ const QDD = path.resolve(__dirname, '..', 'index.js');
 
 async function mkTestDir (fixtureName) {
   const tmpdir = await mkdtemp(path.join(os.tmpdir(), 'qdd-test-'));
-  await cpr(path.join(fixturesDir, fixtureName), tmpdir, false);
+  await cpr(path.join(fixturesDir, fixtureName), tmpdir);
   const origDir = process.cwd();
   process.chdir(tmpdir);
   return async () => {

@@ -54,6 +54,7 @@
   "dependencies": {
     "fs-minipass": "^1.2.5",
     "minizlib": "^1.1.0",
+    "qfastfs": "^1.0.0",
     "tar-stream": "^1.6.1"
   }
 }
