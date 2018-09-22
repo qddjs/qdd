@@ -2,7 +2,7 @@
 'use strict';
 
 const config = require('./lib/config.js');
-const download = require('./lib/download.js');
+const download = require('qdownload');
 const { isdir, mkdirp, cpr } = require('qfastfs');
 const fs = require('fs');
 const util = require('util');
@@ -53,14 +53,14 @@ function installOne (name, integrity, url, destDir, cacheDir, cb) {
   if (cacheDir) {
     isdir(cacheDir, (err, isDir) => {
       if (err || !isDir) {
-        return download(cacheDir, url, integrity, destDir, cb);
+        return download(url, integrity, cacheDir, destDir, cb);
       }
       if (useDest) {
         cpr(cacheDir, destDir, cb);
       }
     });
   } else {
-    return download(cacheDir, url, integrity, destDir, cb);
+    return download(url, integrity, cacheDir, destDir, cb);
   }
 }
 
