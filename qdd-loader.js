@@ -8,26 +8,56 @@ const cacheDir = (process.env.QDD_CACHE || `${process.env.HOME}/.cache/qdd`);
 
 // 1. Set up the lock tree
 
-const lockTree = require(process.cwd() + '/package-lock.json');
-lockTree.requires = lockTree.dependencies;
-
-function getDep (node, depName) {
-  const deps = node.dependencies;
-  return deps && deps[depName] ? deps[depName] : getDep(node.parent, depName);
+let lockTree;
+try {
+  lockTree = require(process.cwd() + '/package-lock.json');
+  parseLockTree();
+} catch (lockTreeErr) {
+  // get it later in _load
 }
 
-(function augmentTree (node, parent) {
-  for (const depName of Object.keys(node.dependencies || {})) {
-    const dep = node.dependencies[depName];
-    dep.parent = node;
-    augmentTree(dep);
+function getLockTree (mainFilename) {
+  if (lockTree) {
+    return lockTree;
   }
-  node.requiresNodes = {};
-  for (const dep of Object.keys(node.requires || {})) {
-    node.requiresNodes[dep] = getDep(node, dep);
+  const content = fs.readFileSync(mainFilename, 'utf8');
+  const [beforeJson, afterJson] = content.split(/^\/\*\*package-lock(?:\s|$)/m);
+  if (afterJson) {
+    const [json, rest] = afterJson.split(/\*\*\/$/m);
+    if (rest) {
+      try {
+        lockTree = JSON.parse(json.replace(/^\s*\*/mg, ""));
+        parseLockTree();
+        return lockTree;
+      } catch (e) {
+        throw new Error('badly formed in-line package-lock');
+      }
+    }
   }
-  delete node.parent; // no longer needed
-})(lockTree);
+  throw new Error('no package-lock found');
+}
+
+function parseLockTree() {
+  lockTree.requires = lockTree.dependencies;
+
+  function getDep (node, depName) {
+    const deps = node.dependencies;
+    return deps && deps[depName] ? deps[depName] : getDep(node.parent, depName);
+  }
+
+  (function augmentTree (node, parent) {
+    for (const depName of Object.keys(node.dependencies || {})) {
+      const dep = node.dependencies[depName];
+      dep.parent = node;
+      augmentTree(dep);
+    }
+    node.requiresNodes = {};
+    for (const dep of Object.keys(node.requires || {})) {
+      node.requiresNodes[dep] = getDep(node, dep);
+    }
+    delete node.parent; // no longer needed
+  })(lockTree);
+}
 
 // 2. Shim the module loader
 
@@ -80,6 +110,6 @@ const origLoad = Module.prototype.load;
 Module.prototype.load = function (filename) {
   this.treeNode = this.parent
     ? (this.parent.nextTreeNode || this.parent.treeNode)
-    : lockTree;
+    : getLockTree(filename);
   return origLoad.call(this, filename);
 };
