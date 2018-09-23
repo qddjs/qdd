@@ -6,6 +6,8 @@ const { execSync } = require('child_process');
 
 const cacheDir = (process.env.QDD_CACHE || `${process.env.HOME}/.cache/qdd`);
 
+let entrypoint;
+
 // 1. Set up the lock tree
 
 let lockTree;
@@ -20,6 +22,7 @@ function getLockTree (mainFilename) {
   if (lockTree) {
     return lockTree;
   }
+  entrypoint = mainFilename;
   const content = fs.readFileSync(mainFilename, 'utf8');
   const [beforeJson, afterJson] = content.split(/^\/\*\*package-lock(?:\s|$)/m);
   if (afterJson) {
@@ -69,7 +72,9 @@ function cache (node) {
     try {
       fs.accessSync(dir, fs.constants.F_OK);
     } catch (e) {
-      execSync(`node ${__dirname}/index.js --onlycache`);
+      execSync(`qdd --onlycache`, {
+        env: Object.assign({}, process.env, { QDD_LOCKJS: entrypoint })
+      });
     }
     installed = true;
   }
