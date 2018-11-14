@@ -24,12 +24,12 @@ try {
 } catch (e) {
   if ('QDD_LOCKJS' in process.env) {
     const content = fs.readFileSync(process.env.QDD_LOCKJS, 'utf8');
-    const [beforeJson, afterJson] = content.split(/^\/\*\*package-lock(?:\s|$)/m);
+    const afterJson = content.split(/^\/\*\*package-lock(?:\s|$)/m)[1];
     if (afterJson) {
       const [json, rest] = afterJson.split(/\*\*\/$/m);
       if (rest) {
         try {
-          tree = JSON.parse(json.replace(/^\s*\*/mg, ""));
+          tree = JSON.parse(json.replace(/^\s*\*/mg, ''));
         } catch (err) {
           throw new Error('badly formed in-line package-lock');
         }

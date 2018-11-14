@@ -24,12 +24,12 @@ function getLockTree (mainFilename) {
   }
   entrypoint = mainFilename;
   const content = fs.readFileSync(mainFilename, 'utf8');
-  const [beforeJson, afterJson] = content.split(/^\/\*\*package-lock(?:\s|$)/m);
+  const afterJson = content.split(/^\/\*\*package-lock(?:\s|$)/m)[1];
   if (afterJson) {
     const [json, rest] = afterJson.split(/\*\*\/$/m);
     if (rest) {
       try {
-        lockTree = JSON.parse(json.replace(/^\s*\*/mg, ""));
+        lockTree = JSON.parse(json.replace(/^\s*\*/mg, ''));
         parseLockTree();
         return lockTree;
       } catch (e) {
@@ -40,7 +40,7 @@ function getLockTree (mainFilename) {
   throw new Error('no package-lock found');
 }
 
-function parseLockTree() {
+function parseLockTree () {
   lockTree.requires = lockTree.dependencies;
 
   function getDep (node, depName) {
