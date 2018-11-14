@@ -66,18 +66,18 @@ async function getNpmTree (opts) {
   return tree;
 }
 
-async function tree (dir) {
+async function tree (dir, topLevel = true) {
   const contents = await readdir(dir);
   const result = {};
   for (let i = 0; i < contents.length; i++) {
     const item = contents[i];
-    if (item.startsWith('.')) {
+    if (item.startsWith('.') && !topLevel) {
       continue;
     }
     const fullItem = dir + '/' + item;
     const stats = await stat(fullItem);
     if (stats.isDirectory()) {
-      result[item] = await tree(fullItem);
+      result[item] = await tree(fullItem, false);
     } else if (item === 'package.json') {
       result[item] = 'package.json';
     } else {

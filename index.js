@@ -6,6 +6,7 @@ const download = require('qdownload');
 const { isdir, mkdirp, cpr } = require('qfastfs');
 const fs = require('fs');
 const util = require('util');
+const path = require('path');
 
 const isProd = config.production;
 
@@ -40,7 +41,8 @@ try {
 }
 
 const todos = [];
-function install (mod, dir) {
+const binTodos = [];
+function install (mod, dir, topLevel = false) {
   const deps = mod.dependencies;
   if (!deps) return;
 
@@ -66,6 +68,9 @@ function install (mod, dir) {
     if (entry.dependencies) {
       install(entry, destDir);
     }
+    if (topLevel && destDir) {
+      binTodos.push(installBin.bind(null, name, destDir, `${dir}/node_modules/.bin`));
+    }
   }
 }
 
@@ -84,17 +89,50 @@ function installOne (name, integrity, url, destDir, cacheDir, cb) {
   }
 }
 
+function installBin (name, destDir, binDir, cb) {
+  mkdirp(binDir, err => {
+    if (err) {
+      cb(err);
+      return;
+    }
+    let { bin } = require(destDir + '/package.json');
+    if (typeof bin === 'string') {
+      bin = { [name]: bin };
+    }
+    for (const binName in bin) {
+      try {
+        fs.symlinkSync(path.join(destDir, bin[binName]), path.join(binDir, binName));
+      } catch (e) {
+        cb(e);
+        return;
+      }
+    }
+    cb();
+  });
+}
+
 function doTheTodos () {
+  let todo = todos.length;
   for (const fn of todos) {
     fn(err => {
+      todo--;
       if (err) {
         throw err;
+      }
+      if (todo === 0) {
+        for (const binFn of binTodos) {
+          binFn(err => {
+            if (err) {
+              throw err;
+            }
+          });
+        }
       }
     });
   }
 }
 
-install(tree, process.cwd());
+install(tree, process.cwd(), true);
 
 if (useCache) {
   mkdirp(config.cacheDir, (err) => {

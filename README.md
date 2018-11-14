@@ -7,13 +7,11 @@
 
 
 **`qdd`** is short for **q**uickly **d**ownload **d**ependencies. That's all it
-does. It's meant as a replacement for `npm ci` in situations where:
+does. It's meant as a replacement for `npm ci` in situations where you don't
+need install scripts. (This means no compiled/native-addon modules either.)
 
-* You don't need install scripts. (Note: this means no compiled modules.)
-* You don't need the `node_modules/.bin` directory.
-
-These two corners are cut in order to deliver modules to you at high speed. See
-the Benchmarks section below for more details.
+This corner is cut in order to deliver modules to you at high speed. See the
+Benchmarks section below for more details.
 
 This tool, `qdd`, is not meant as a replacement for `npm` or even for `npm ci`.
 `npm` is a full-featured JavaScript project management tool, and `qdd` is not.
@@ -21,10 +19,9 @@ This tool, `qdd`, is not meant as a replacement for `npm` or even for `npm ci`.
 order to maintain levels of compatibility that we're completely ignoring.
 
 All software is about tradeoffs. In this case, we're making the tradeoff that
-this tool is only useful if all your dependencies are `install`-script-free, and
-that you don't need the `.bin` directory. These are some pretty severe
-limitations, but in many situations, this is still good enough to get the job
-done.
+this tool is only useful if all your dependencies are `install`-script-free.
+This is a prette severe limitation, but in many situations, this is still good
+enough to get the job done.
 
 ## Example
 
@@ -39,8 +36,6 @@ qdd
 To get an idea whether `qdd` might be appropriate for your project, check that
 the following are true:
 
-* You don't rely on any dependencies' executables in your project's `"scripts"`
-  in `package.json`.
 * Your project operates just fine if you pass `--ignore-scripts` to `npm` or
   `yarn` when you install dependencies.
 * You don't rely on `bundleDependencies`.

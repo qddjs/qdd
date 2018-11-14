@@ -52,7 +52,7 @@
     "yarn": "^1.9.4"
   },
   "dependencies": {
-    "qdownload": "^1.0.0",
-    "qfastfs": "^1.0.0"
+    "qdownload": "^1.1.0",
+    "qfastfs": "^1.0.1"
   }
 }
