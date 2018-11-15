@@ -94,5 +94,6 @@ module.exports = {
   exec,
   getQddTree,
   getNpmTree,
-  tree
+  tree,
+  QDD
 };

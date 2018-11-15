@@ -52,6 +52,12 @@ install the dependencies into `$PWD/node_modules/`. **The `node_modules`
 directory must not exist prior to running `qdd`. It will not be deleted
 automatically, as it would in `npm ci`.**
 
+If the first argument passed to `qdd` does not start with a `-`, then the
+command will be passed through to `npm`, as found on the `$PATH`. This is useful
+for situations where you want to use `qdd` in place of `npm` as your project 
+management tool. For example, you can install a single package into your project
+with `qdd install package-name`.
+
 ### Options
 
 Options may either be given as environment variables of the form `QDD_OPTION` or

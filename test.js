@@ -12,7 +12,8 @@ const {
   exec,
   runQdd,
   clearNodeModules,
-  tree
+  tree,
+  QDD
 } = require('./test/util.js');
 
 const test = require('pitesti')({ timeout: 60000 });
@@ -114,6 +115,13 @@ test`debug`(() => {
   }
   assert.deepStrictEqual(results, ['QDD: hola', 'QDD: mundo']);
   delete process.env.QDD_DEBUG;
+});
+
+test`defer to npm`(async () => {
+  const qddOutput = await exec(`node ${QDD} show qdd`);
+  const npmOutput = await exec(`npm show qdd`);
+  assert.strictEqual(qddOutput.stdout, npmOutput.stdout);
+  assert.strictEqual(qddOutput.stderr, npmOutput.stderr);
 });
 
 test`config`(() => {
