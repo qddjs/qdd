@@ -1,6 +1,50 @@
 #!/usr/bin/env node
 'use strict';
 
+const { Worker } = require('worker_threads');
+
+const SIZE = 4;
+
+class WorkerPool {
+  constructor() {
+    this._pool = []
+    for (let i = 0; i < SIZE; i++) {
+      const newWorker = new Worker(__dirname + '/lib/worker.js');
+      newWorker.once('online', () => {
+        newWorker.isOnline = true;
+      }).on('error', e => {
+        console.log(e.stack)
+        throw e
+      }).on('message', ([id, err]) => {
+        const cb = this._cbMap.get(id);
+        cb(err);
+        this._cbMap.delete(id);
+      });
+      this._pool.push(newWorker);
+    }
+    this._cur = -1;
+    this._cbId = -1;
+    this._cbMap = new Map()
+  }
+
+  postMessage(val, cb) {
+    this._cur++;
+    if (this._cur === SIZE) {
+      this._cur = 0;
+    }
+    const worker = this._pool[this._cur];
+    const cbId = ++this._cbId;
+    this._cbMap.set(cbId, cb);
+    this._pool[this._cur].postMessage([cbId,val]);
+  }
+
+  terminate() {
+    for (const worker of this._pool) {
+      worker.terminate();
+    }
+  }
+}
+
 (() => { // BEGIN IIFE
   // Need the IIFE so we can do the early return. It's not actually necessary,
   // but standard barfs without it.
@@ -36,6 +80,8 @@
     console.error('Please delete your node_modules directory before installing.');
     process.exit(1);
   }
+
+  const workerPool = new WorkerPool();
 
   let tree;
   try {
@@ -83,12 +129,12 @@
       }
       const destDir = useDest ? `${dir}/node_modules/${name}` : null;
       const cacheDir = useCache ? config.cacheDir + '/' + integrity : null;
-      todos.push(installOne.bind(null, name, integrity, url, destDir, cacheDir));
+      todos.push([name, integrity, url, destDir, cacheDir]);
       if (entry.dependencies) {
         install(entry, destDir);
       }
       if (topLevel && destDir) {
-        binTodos.push(installBin.bind(null, name, destDir, `${dir}/node_modules/.bin`));
+        binTodos.push([name, destDir, `${dir}/node_modules/.bin`]);
       }
     }
   }
@@ -97,6 +143,7 @@
     if (cacheDir) {
       isdir(cacheDir, (err, isDir) => {
         if (err || !isDir) {
+          return workerPool.postMessage([url, integrity, cacheDir, destDir], cb)
           return download(url, integrity, cacheDir, destDir, cb);
         }
         if (useDest) {
@@ -132,17 +179,25 @@
 
   function doTheTodos () {
     let todo = todos.length;
-    for (const fn of todos) {
-      fn(err => {
+    for (const argList of todos) {
+      installOne(...argList, err => {
         todo--;
         if (err) {
           throw err;
         }
         if (todo === 0) {
-          for (const binFn of binTodos) {
-            binFn(err => {
+          let binTodo = binTodos.length;
+          if (binTodo === 0) {
+            workerPool.terminate()
+          }
+          for (const binArgList of binTodos) {
+            installBin(...binArgList, err => {
+              binTodo--;
               if (err) {
                 throw err;
+              }
+              if (binTodo === 0) {
+                workerPool.terminate()
               }
             });
           }
@@ -164,3 +219,4 @@
     doTheTodos();
   }
 })(); // END IIFE
+
