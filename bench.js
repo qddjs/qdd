@@ -14,66 +14,64 @@ const primedNpmTimes = [];
 const primedYarnTimes = [];
 const primedQddTimes = [];
 
-async function freshNpm () {
-  await exec(`rm -rf .npm-cache`);
-  await exec(`rm -rf node_modules`);
+async function timeCmd(cmd, cacheDir) {
+  if (cacheDir) {
+    await exec(`rm -rf ${cacheDir}`);
+  }
+  await exec(`rm -rf node_modules`)
   const start = process.hrtime();
-  await exec(`npm ci --ignore-scripts --cache .npm-cache`);
+  await exec(cmd);
   const elapsed = process.hrtime(start);
-  const time = elapsed[0] + elapsed[1] / 1e9;
+  return elapsed[0] + elapsed[1] / 1e9;
+}
+
+async function freshNpm () {
+  const time = await timeCmd(
+    `npm ci --ignore-scripts --cache .npm-cache`,
+    '.npm-cache'
+  );
   freshNpmTimes.push(time);
   console.log(' fresh cache npm ci:', time, 'seconds');
 }
 
 async function freshYarn () {
-  await exec(`rm -rf .yarn-cache`);
-  await exec(`rm -rf node_modules`);
-  const start = process.hrtime();
-  await exec(`yarn --ignore-scripts --cache-folder .yarn-cache`);
-  const elapsed = process.hrtime(start);
-  const time = elapsed[0] + elapsed[1] / 1e9;
+  const time = await timeCmd(
+    `yarn --ignore-scripts --cache-folder .yarn-cache`,
+    '.yarn-cache'
+  );
   freshYarnTimes.push(time);
   console.log('   fresh cache yarn:', time, 'seconds');
 }
 
 async function freshQdd () {
-  await exec(`rm -rf ~/.cache/qdd`);
-  await exec(`rm -rf node_modules`);
-  const start = process.hrtime();
-  await exec(`node ${QDD}`);
-  const elapsed = process.hrtime(start);
-  const time = elapsed[0] + elapsed[1] / 1e9;
+  const time = await timeCmd(
+    `node ${QDD} --cache .qdd-cache`,
+    '.qdd-cache'
+  );
   freshQddTimes.push(time);
   console.log('    fresh cache qdd:', time, 'seconds');
 }
 
 async function primedNpm () {
-  await exec(`rm -rf node_modules`);
-  const start = process.hrtime();
-  await exec(`npm ci --ignore-scripts --cache .npm-cache`);
-  const elapsed = process.hrtime(start);
-  const time = elapsed[0] + elapsed[1] / 1e9;
+  const time = await timeCmd(
+    `npm ci --ignore-scripts --cache .npm-cache`
+  );
   primedNpmTimes.push(time);
-  await exec(`rm -rf .npm-cache`);
   console.log('primed cache npm ci:', time, 'seconds');
 }
 
 async function primedYarn () {
-  await exec(`rm -rf node_modules`);
-  const start = process.hrtime();
-  await exec(`yarn --ignore-scripts --cache-folder .yarn-cache`);
-  const elapsed = process.hrtime(start);
-  const time = elapsed[0] + elapsed[1] / 1e9;
+  const time = await timeCmd(
+    `yarn --ignore-scripts --cache-folder .yarn-cache`
+  );
   primedYarnTimes.push(time);
   console.log('  primed cache yarn:', time, 'seconds');
 }
 
 async function primedQdd () {
-  await exec(`rm -rf node_modules`);
-  const start = process.hrtime();
-  await exec(`node ${QDD}`);
-  const elapsed = process.hrtime(start);
-  const time = elapsed[0] + elapsed[1] / 1e9;
+  const time = await timeCmd(
+    `node ${QDD} --cache .qdd-cache`
+  );
   primedQddTimes.push(time);
   console.log('   primed cache qdd:', time, 'seconds');
 }
